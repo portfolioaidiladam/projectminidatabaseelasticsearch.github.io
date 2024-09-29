@@ -397,6 +397,185 @@ GET http://localhost:9200/products/_search?_source_excludes=price
 ### select total, customer_id from order where _id = 1
 GET http://localhost:9200/order/_doc/1?_source_includes=total,customer_id
 
+
+## Belajar Mapping, Explicit mapping
 ### create index customers_v2
 PUT http://localhost:9200/customers_v2
+
+### update mapping customers_v2
+PUT http://localhost:9200/customers_v2/_mapping
+Content-Type: application/json
+
+{
+  "numeric_detection": true,
+  "date_detection": true,
+  "dynamic_date_formats": [
+    "yyyy-MM-dd HH:mm:ss",
+    "yyyy-MM-dd",
+    "yyyy/MM/dd HH:mm:ss",
+    "yyyy/MM/dd"
+  ],
+  "properties": {
+    "username": {
+      "type": "keyword"
+    },
+    "first_name": {
+      "type": "text"
+    },
+    "last_name": {
+      "type": "text"
+    },
+    "email": {
+      "type": "keyword"
+    },
+    "gender": {
+      "type": "keyword"
+    },
+    "birth_date": {
+      "type": "date",
+      "format": "yyyy-MM-dd"
+    }
+  }
+}
+
+### get mapping customers_v2
+GET http://localhost:9200/customers_v2/_mapping
+
+### switch alias customer from customers to customers_v2
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+  "actions" : [
+    {
+      "remove" : {
+        "alias" : "customer",
+        "index" : "customers"
+      }
+    },
+    {
+      "add" : {
+        "alias" : "customer",
+        "index" : "customers_v2"
+      }
+    }
+  ]
+}
+
+### get aliases
+GET http://localhost:9200/_aliases
+
+### search customer
+GET http://localhost:9200/customer/_search
+
+### bulk insert customers
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< customers.json
+
+
+# Belajar Object Field
+### update customers_v2 mapping
+PUT http://localhost:9200/customers_v2/_mapping
+Content-Type: application/json
+
+{
+  "properties" : {
+    "address" : {
+      "properties" : {
+        "street" : {
+          "type" : "text"
+        },
+        "city" : {
+          "type" : "text"
+        },
+        "province" : {
+          "type" : "text"
+        },
+        "country" : {
+          "type" : "text"
+        },
+        "zip_code" : {
+          "type" : "keyword"
+        }
+      }
+    }
+  }
+}
+
+### insert customers
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< customers-with-addresses.json
+
+
+## Belajar Array Field
+### update customers_v2 mapping
+PUT http://localhost:9200/customers_v2/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "hobbies": {
+      "type": "text"
+    },
+    "banks": {
+      "properties": {
+        "name": {
+          "type": "text"
+        },
+        "account_number": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+
+### get customers_v2 mapping
+GET http://localhost:9200/customers_v2/_mapping
+
+### bulk index customers_v2
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< customers-with-banks-and-hobbies.json
+
+### search customer
+POST http://localhost:9200/customer/_search
+
+
+## Belajar Query yang bisa kita kirim menggunakan Search API
+### search customer using match_all
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "match_all" : {}
+  }
+}
+
+### search customer using match_all
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "match_all" : {}
+  },
+  "size" : 5,
+  "from" : 0,
+  "sort" : [
+    {
+      "username" : {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+
 
