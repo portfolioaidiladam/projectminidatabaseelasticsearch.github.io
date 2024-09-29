@@ -272,3 +272,131 @@ Content-Type: application/json
   }
 }
 
+# Belajar Delete Api
+### delete customer spammer
+DELETE http://localhost:9200/customers/_doc/spammer
+
+
+# belajar Bulk Api
+### search customer
+GET http://localhost:9200/customers/_search
+
+### bulk api
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< bulk.json
+
+# belajar Alias
+### create alias customer and order
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+  "actions" : [
+    {
+      "add" : {
+        "alias" : "customer",
+        "index" : "customers"
+      }
+    },
+    {
+      "add" : {
+        "alias" : "order",
+        "index" : "orders"
+      }
+    }
+  ]
+}
+
+### get aliases
+GET http://localhost:9200/_aliases
+
+### search customer
+GET http://localhost:9200/customer/_search
+
+### search order
+GET http://localhost:9200/order/_search
+
+## Belajar ReIndex API, biasanya ini buat proses migrasi data dari satu index ke index lainnya
+### create index orders_v2
+PUT http://localhost:9200/orders_v2
+
+### update orders_v2 mapping
+PUT http://localhost:9200/orders_v2/_mapping
+Content-Type: application/json
+
+{
+  "numeric_detection" : true,
+  "date_detection" : true,
+  "dynamic_date_formats" : [
+    "yyyy-MM-dd HH:mm:ss",
+    "yyyy-MM-dd",
+    "yyyy/MM/dd HH:mm:ss",
+    "yyyy/MM/dd"
+  ]
+}
+
+### reindex from orders to orders_v2
+POST http://localhost:9200/_reindex
+Content-Type: application/json
+
+{
+  "source": {
+    "index": "orders"
+  },
+  "dest": {
+    "index": "orders_v2"
+  }
+}
+
+### search orders
+GET http://localhost:9200/orders/_search
+
+### search orders_v2
+GET http://localhost:9200/orders_v2/_search
+
+### switch alias order from orders to orders_v2
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+  "actions" : [
+    {
+      "remove" : {
+        "alias" : "order",
+        "index" : "orders"
+      }
+    },
+    {
+      "add" : {
+        "alias" : "order",
+        "index" : "orders_v2"
+      }
+    }
+  ]
+}
+
+### get aliases
+GET http://localhost:9200/_aliases
+
+### search to order alias
+GET http://localhost:9200/order/_search
+
+
+## Belajar Source
+### search to products
+GET http://localhost:9200/products/_search
+
+### select total, customer_id, items.product_d from order
+GET http://localhost:9200/order/_search?_source_includes=total,customer_id,items.product_id
+
+### select *, exclude price from products
+GET http://localhost:9200/products/_search?_source_excludes=price
+
+### select total, customer_id from order where _id = 1
+GET http://localhost:9200/order/_doc/1?_source_includes=total,customer_id
+
+### create index customers_v2
+PUT http://localhost:9200/customers_v2
+
