@@ -577,5 +577,313 @@ Content-Type: application/json
   ]
 }
 
+## Belajar Term Query
+### search customer where gender = 'Female'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "term" : {
+      "gender" : "Female"
+    }
+  },
+  "size" : 5,
+  "from" : 0,
+  "sort" : [
+    {
+      "username" : {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+### search customer where banks.name = 'BCA'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "term" : {
+      "banks.name" : "BCA"
+    }
+  },
+  "size" : 5,
+  "from" : 0,
+  "sort" : [
+    {
+      "username" : {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+## Belajar Match Query (cocok untuk mencari type data text)
+### search customer where banks.name = 'BCA'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "match" : {
+      "banks.name" : "BCA"
+    }
+  },
+  "size" : 5,
+  "from" : 0,
+  "sort" : [
+    {
+      "username" : {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+### banks.name = "BCA" => banks.name = ["bca"]
+### banks.name = "BCA Digital" => banks.name = ["bca", "digital"]  untuk type data text akan dikonfersi seperti ini
+### email = "AIDIL@example.COM" => email = ["aidil", "example", "com"]
+
+### search customer where banks.name = 'BCA DIGITAL'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "match" : {
+      "banks.name" : {
+        "query" : "BCA DIGITAL",
+        "operator" : "AND"
+      }
+    }
+  },
+  "size" : 5,
+  "from" : 0,
+  "sort" : [
+    {
+      "username" : {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+# Belajar Terms Query (cocok kalau attributnya bukan text)
+### search customer where username IN ('username1', 'username2', 'username3')
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "terms": {
+      "username": [
+        "username1",
+        "username2",
+        "username3"
+      ]
+    }
+  }
+}
+
+### search customer where banks.name IN ('BCA', 'BTN', 'BNI')
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "terms": {
+      "banks.name": [
+        "bca",
+        "btn",
+        "bni"
+      ]
+    }
+  }
+}
+
+## Belajar Boolean (ini cocok untuk bagaimana mencari kebeberapa field )
+### search customer where hobbies = 'gaming' AND banks.name = 'bca'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "hobbies": "gaming"
+          }
+        },
+        {
+          "match": {
+            "banks.name": {
+              "query" : "bca digital",
+              "operator" : "AND"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+### search customer where hobbies = 'gaming' AND banks.name = 'bca'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "hobbies": "gaming"
+          }
+        },
+        {
+          "match": {
+            "banks.name": {
+              "query" : "bca digital",
+              "operator" : "AND"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort" : [
+    {
+      "username" : {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+### search customer where hobbies != 'gaming' AND banks.name != 'bca digital'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        {
+          "term": {
+            "hobbies": "gaming"
+          }
+        },
+        {
+          "match": {
+            "banks.name": {
+              "query": "bca digital"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+### search customer where hobbies = 'GAMING' AND (banks.name = 'bca' OR 'banks.name = 'bni)
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must" : [
+        {
+          "term" : {
+            "hobbies" : "gaming"
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "banks.name": "bca"
+          }
+        },
+        {
+          "term": {
+            "banks.name": "bni"
+          }
+        }
+      ],
+      "minimum_should_match" : 1
+    }
+  }
+}
+
+
+## Belajar Score
+### explain score for customer username126
+POST http://localhost:9200/customer/_explain/username126
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must" : [
+        {
+          "term" : {
+            "hobbies" : {
+              "value" : "gaming",
+              "boost" : 0
+            }
+          }
+        }
+      ],
+      "should": [
+        {
+          "term": {
+            "banks.name": "bca"
+          }
+        },
+        {
+          "term": {
+            "banks.name": "bni"
+          }
+        }
+      ],
+      "minimum_should_match" : 1
+    }
+  }
+}
+
+### search customer where (banks.name = 'bca' OR 'banks.name = 'bni)
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "term": {
+            "banks.name": {
+              "value" : "bca",
+              "boost" : 0
+            }
+          }
+        },
+        {
+          "term": {
+            "banks.name": {
+              "value" : "bni",
+              "boost" : 2
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
 
 
