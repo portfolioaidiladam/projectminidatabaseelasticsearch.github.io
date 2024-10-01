@@ -855,6 +855,7 @@ Content-Type: application/json
   }
 }
 
+## Belajar Boost Score
 ### search customer where (banks.name = 'bca' OR 'banks.name = 'bni)
 POST http://localhost:9200/customer/_search
 Content-Type: application/json
@@ -883,6 +884,317 @@ Content-Type: application/json
     }
   }
 }
+
+## Belajar Flattened Field
+### update customer mapping
+PUT http://localhost:9200/customer/_mapping
+Content-Type: application/json
+
+{
+  "properties" : {
+    "labels" : {
+      "type": "flattened"
+    }
+  }
+}
+
+### get customer mapping
+GET http://localhost:9200/customer/_mapping
+
+### update customer username1
+POST http://localhost:9200/customer/_update/username1
+Content-Type: application/json
+
+{
+  "doc" : {
+    "labels" : {
+      "priority" : "vip",
+      "discount" : "10% discount",
+      "complaint": "always complaint"
+    }
+  }
+}
+
+### get customer username1
+GET http://localhost:9200/customer/_doc/username1
+
+### update customer username2
+POST http://localhost:9200/customer/_update/username2
+Content-Type: application/json
+
+{
+  "doc" : {
+    "labels" : {
+      "priority" : "regular",
+      "verified" : "unverified",
+      "buy" : "never buy"
+    }
+  }
+}
+
+### get customer username2
+GET http://localhost:9200/customer/_doc/username2
+
+### search vip customer
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "term" : {
+      "labels": "regular"
+    }
+  }
+}
+
+### search vip and regular customer
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "bool" : {
+      "should" : [
+        {
+          "term" : {
+            "labels.priority" : "vip"
+          }
+        },
+        {
+          "term" : {
+            "labels.priority" : "regular"
+          }
+        }
+      ]
+    }
+  }
+}
+
+## Belajar Nested Field
+### create index parents
+PUT http://localhost:9200/parents
+
+### update parents mapping
+PUT http://localhost:9200/parents/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "first_name": {
+      "type": "text"
+    },
+    "last_name": {
+      "type": "text"
+    },
+    "children": {
+      "properties": {
+        "first_name": {
+          "type": "text"
+        },
+        "last_name": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
+### get parents mapping
+GET http://localhost:9200/parents/_mapping
+
+### insert parent aidil
+POST http://localhost:9200/parents/_doc/1
+Content-Type: application/json
+
+{
+  "first_name" : "Aidil",
+  "last_name" : "Adam",
+  "children" : [
+    {
+      "first_name" : "Joko",
+      "last_name" : "Morro"
+    },
+    {
+      "first_name" : "Budi",
+      "last_name" : "Nugraha"
+    }
+  ]
+}
+
+### get parent 1
+GET http://localhost:9200/parents/_doc/1
+
+### search children
+POST http://localhost:9200/parents/_search
+Content-Type: application/json
+
+{
+  "query" : {
+    "bool" : {
+      "must": [
+        {
+          "match": {
+            "children.first_name" : "Joko"
+          }
+        },
+        {
+          "match": {
+            "children.last_name" : "Nugraha"
+          }
+        }
+      ]
+    }
+  }
+}
+
+### delete parents index
+DELETE http://localhost:9200/parents
+
+### create index parents
+PUT http://localhost:9200/parents
+
+### update parents mapping
+PUT http://localhost:9200/parents/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "first_name": {
+      "type": "text"
+    },
+    "last_name": {
+      "type": "text"
+    },
+    "children": {
+      "type": "nested",
+      "properties": {
+        "first_name": {
+          "type": "text"
+        },
+        "last_name": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
+### get parents mapping
+GET http://localhost:9200/parents/_mapping
+
+### insert parent eko
+POST http://localhost:9200/parents/_doc/1
+Content-Type: application/json
+
+{
+  "first_name" : "Aidil",
+  "last_name" : "Adam",
+  "children" : [
+    {
+      "first_name" : "Joko",
+      "last_name" : "Morro"
+    },
+    {
+      "first_name" : "Budi",
+      "last_name" : "Nugraha"
+    }
+  ]
+}
+
+### search children
+POST http://localhost:9200/parents/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "nested": {
+      "path": "children",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "children.first_name": "Budi"
+              }
+            },
+            {
+              "match": {
+                "children.last_name": "Nugraha"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+## Belajar Multi Fields , Multi Fields adalah fitur dimana kita bisa membuat beberapa nama field dari satu field
+### create index category
+PUT http://localhost:9200/categories
+
+### update category mapping
+PUT http://localhost:9200/categories/_mapping
+Content-Type: application/json
+
+{
+  "properties" : {
+    "name": {
+      "type": "text",
+      "fields": {
+        "raw" : {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+
+### get categories mapping
+GET http://localhost:9200/categories/_mapping
+
+### insert categories
+POST http://localhost:9200/categories/_doc/1
+Content-Type: application/json
+
+{
+  "name" : "Laptop Murah"
+}
+
+### search categories
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match" : {
+      "name" : "laptop"
+    }
+  },
+  "sort": [
+    {
+      "name.raw" : {
+        "order": "asc"
+      }
+    }
+  ]
+}
+
+### search categories
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match" : {
+      "name.raw" : "Laptop Murah"
+    }
+  }
+}
+
+
+
+
 
 
 
