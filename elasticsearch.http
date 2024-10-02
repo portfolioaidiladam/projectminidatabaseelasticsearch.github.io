@@ -1192,6 +1192,203 @@ Content-Type: application/json
   }
 }
 
+## Belajar Update By Query Api
+### update products mapping
+PUT http://localhost:9200/products/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "name": {
+      "type": "text",
+      "fields": {
+        "raw": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+
+### get products mapping
+GET http://localhost:9200/products/_mapping
+
+### search products
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "name.raw": "Mie Sedap Soto"
+    }
+  }
+}
+
+### update products by query
+POST http://localhost:9200/products/_update_by_query
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+
+## Belajar Delete By Query Api
+### insert salah category
+POST http://localhost:9200/categories/_doc/2
+Content-Type: application/json
+
+{
+  "name": "Salah"
+}
+
+### insert salah category
+POST http://localhost:9200/categories/_doc/3
+Content-Type: application/json
+
+{
+  "name": "Salah Lagi"
+}
+
+###search categories
+POST http://localhost:9200/categories/_search
+
+### delete categories by query
+POST http://localhost:9200/categories/_delete_by_query
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "name": "salah"
+    }
+  }
+}
+
+
+## Belajar  Search After
+### delete all categories
+POST http://localhost:9200/categories/_delete_by_query
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+### update mapping for categories
+PUT http://localhost:9200/categories/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    }
+  }
+}
+
+### bulk insert categories
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< categories.json
+
+### search categories
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+  "size": 100,
+  "from": 0,
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+      "id": {
+        "order": "asc"
+      }
+    }
+  ]
+}
+
+### search categories
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+  "size": 100,
+  "from": 0,
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+    {
+      "id": {
+        "order": "asc"
+      }
+    }
+  ],
+  "search_after": [
+    "10357"
+  ]
+}
+
+## Belajar Cat API
+### Cat API
+GET http://localhost:9200/_cat
+
+### Cat API - Indices
+GET http://localhost:9200/_cat/indices?v
+
+### Cat API - Aliases
+GET http://localhost:9200/_cat/aliases?v
+
+### Cat API - Nodes
+GET http://localhost:9200/_cat/nodes?v
+
+## Belajar Snapsot
+### Create snapshot repository
+PUT http://localhost:9200/_snapshot/first_backup
+Content-Type: application/json
+
+{
+  "type": "fs",
+  "settings": {
+    "location": "first_backup"
+  }
+}
+
+### get snapshot
+GET http://localhost:9200/_snapshot
+
+### create snapshot
+PUT http://localhost:9200/_snapshot/first_backup/snapshot1
+Content-Type: application/json
+
+{
+  "indices": [],
+  "metadata": {
+    "taken_by": "aidil",
+    "taken_because": "backup before upgradring"
+  }
+}
+
+### get snapshot
+GET http://localhost:9200/_snapshot/first_backup/snapshot1
+
+### cat api - get snapshot
+GET http://localhost:9200/_cat/snapshots?v
+
+## Belajar Restore
+
+
+
 
 
 
